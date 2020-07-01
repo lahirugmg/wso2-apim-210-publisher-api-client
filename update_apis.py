@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import json
+
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -12,16 +14,7 @@ apim_view_scope = 'apim:api_view'
 apim_create_scope = 'apim:api_create'
 client_id = 'zBEN3SnAhk5h0hpOaxUfo7ST5Uwa'
 client_secret = 'glab_keJZ1VEWWtxzeI0KIm7chka'
-new_endpoint_config = {
-    "suspendDuration": "1000",
-    "suspendMaxDuration": "5000",
-    "factor": "1",
-    "retryErroCode": "101504",
-    "retryTimeOut": "3",
-    "retryDelay": "1000",
-    "actionSelect": "fault",
-    "actionDuration": "12345"
-}
+new_endpoint_config = {"suspendErrorCode": "101504", "suspendDuration": "1000", "suspendMaxDuration": "5000", "factor": "2", "retryErroCode": ["101504", "101505"], "retryTimeOut": "3", "retryDelay": "1000", "actionSelect": "fault", "actionDuration": "98765"}
 
 
 def get_access_token(scope):
@@ -39,17 +32,32 @@ def get_access_token(scope):
 
 
 def update_api(api_id, resp):
+    updated_payload = resp.json();
+    returned_endpoint_config = updated_payload["endpointConfig"]
+    ep_config = json.loads(returned_endpoint_config)
+    ep_config["production_endpoints"]["config"] = new_endpoint_config
+    ep_config = json.dumps(ep_config)
+
+    returned_apiDefinition = updated_payload["apiDefinition"]
+    returned_apiDefinition = json.dumps(returned_apiDefinition)
+
+    updated_payload["apiDefinition"] = returned_apiDefinition
+    updated_payload["endpointConfig"] = json.dumps(ep_config)
+
     access_token = get_access_token(apim_create_scope)
     update_payload = resp
+
     resp = requests.put(api_url + get_apis_context + '/' + api_id, data=update_payload, verify=False,
                         headers={'Authorization': 'Bearer ' + access_token})
     if resp.status_code == 401:
         # handling the case where token is expired after token call, try with new token
         access_token = get_access_token(apim_create_scope)
-        resp = requests.put(api_url + get_apis_context + '/' + api_id, data=update_payload, verify=False,
+        resp = requests.put(api_url + get_apis_context + '/' + api_id, data=update_payload,
+                            verify=False,
                             headers={'Authorization': 'Bearer ' + access_token})
     if resp.status_code == 200:
         print('API updated successfully')
+
 
 access_token = get_access_token(apim_view_scope)
 if (access_token is not None):
@@ -64,8 +72,7 @@ if (access_token is not None):
                             headers={'Authorization': 'Bearer ' + access_token})
     if resp.status_code == 200:
         for api in resp.json()["list"]:
-            resp = requests.get(api_url + get_apis_context + '/' + api["id"], verify=False,
+            api_id = api["id"]
+            resp = requests.get(api_url + get_apis_context + '/' + api_id, verify=False,
                                 headers={'Authorization': 'Bearer ' + access_token})
-            returned_endpoint_config = resp.json()["endpointConfig"]
-            print(returned_endpoint_config["production_endpoints"])
-            update_api(api["id"], resp)
+            update_api(api_id, resp)
