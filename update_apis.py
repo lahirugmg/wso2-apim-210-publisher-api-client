@@ -29,28 +29,27 @@ def get_access_token(scope):
         print('[ERROR] Error while retrieving the access token')
         return None
 
-def update_api(api_id, resp):
-    updated_payload = resp.json();
+def update_api(api_id, api_update_payload):
+    updated_payload = api_update_payload.json();
     returned_endpoint_config = updated_payload["endpointConfig"]
     ep_config = json.loads(returned_endpoint_config)
     ep_config["production_endpoints"]["config"] = new_endpoint_config
     updated_payload["endpointConfig"] = ep_config
-
     access_token = get_access_token(apim_create_scope)
     if (access_token is not None):
 
-        resp = requests.put(api_url + get_apis_context + '/' + api_id, data=updated_payload,
-                            verify=False,
-                            headers={'Authorization': 'Bearer ' + access_token,
+        resp = requests.put(api_url + get_apis_context + '/' + api_id, data=json.dumps(updated_payload),
+                                          verify=False,
+                                          headers={'Authorization': 'Bearer ' + access_token,
                                      'Content-Type': 'application/json'})
         if resp.status_code == 401:
             # handling the case where token is expired after token call, try with new token
             access_token = get_access_token(apim_create_scope)
             resp = requests.put(api_url + get_apis_context + '/' + api_id, data=updated_payload,
-                                verify=False,
-                                headers={'Authorization': 'Bearer ' + access_token,
+                                              verify=False,
+                                              headers={'Authorization': 'Bearer ' + access_token,
                                          'Content-Type': 'application/json'})
-        if resp.status_code == 200:
+        if api_update_payload.status_code == 200:
             print('[INFO] API updated successfully')
 
     else:
