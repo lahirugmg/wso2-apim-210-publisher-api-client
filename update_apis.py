@@ -34,7 +34,8 @@ def update_api(api_id, api_update_payload):
     returned_endpoint_config = updated_payload["endpointConfig"]
     ep_config = json.loads(returned_endpoint_config)
     ep_config["production_endpoints"]["config"] = new_endpoint_config
-    updated_payload["endpointConfig"] = ep_config
+    updated_payload["endpointConfig"] = json.dumps(ep_config)
+
     access_token = get_access_token(apim_create_scope)
     if (access_token is not None):
 
