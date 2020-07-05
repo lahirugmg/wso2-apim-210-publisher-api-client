@@ -5,17 +5,18 @@ from requests.auth import HTTPBasicAuth
 
 token_url = 'https://localhost:9443/oauth2/token'
 api_url = 'https://localhost:9443/api/am/publisher/v0.11'
-get_apis_context = '/apis'
 username = 'admin'
 password = 'admin'
-apim_view_scope = 'apim:api_view'
-apim_create_scope = 'apim:api_create'
 client_id = 'zBEN3SnAhk5h0hpOaxUfo7ST5Uwa'
 client_secret = 'glab_keJZ1VEWWtxzeI0KIm7chka'
 new_endpoint_config = {"suspendErrorCode": "101504", "suspendDuration": "1000",
                        "suspendMaxDuration": "5000", "factor": "2",
                        "retryErroCode": ["101504", "101505"], "retryTimeOut": "3",
                        "retryDelay": "1000", "actionSelect": "fault", "actionDuration": "909090"}
+
+get_apis_context = '/apis'
+apim_view_scope = 'apim:api_view'
+apim_create_scope = 'apim:api_create'
 
 def get_access_token(scope):
     token_req = {'grant_type': 'password', 'username': username, 'password': password,
