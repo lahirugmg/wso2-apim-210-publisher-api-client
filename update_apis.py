@@ -39,7 +39,6 @@ def update_api(api_id, api_update_payload):
 
     access_token = get_access_token(apim_create_scope)
     if (access_token is not None):
-
         resp = requests.put(api_url + get_apis_context + '/' + api_id, data=json.dumps(updated_payload),
                                           verify=False,
                                           headers={'Authorization': 'Bearer ' + access_token,
@@ -51,8 +50,10 @@ def update_api(api_id, api_update_payload):
                                               verify=False,
                                               headers={'Authorization': 'Bearer ' + access_token,
                                          'Content-Type': 'application/json'})
-        if api_update_payload.status_code == 200:
+        if resp.status_code == 200:
             print('[INFO] API updated successfully')
+        else:
+            print('[ERROR] API update unsuccessful. Response code ' + resp.status_code)
 
     else:
         print('[ERROR] Not able to get access token for updating API')
@@ -63,7 +64,16 @@ def get_api(api_id):
     if (access_token is not None):
         resp = requests.get(api_url + get_apis_context + '/' + api_id, verify=False,
                             headers={'Authorization': 'Bearer ' + access_token})
-        return resp
+        if resp.status_code == 401:
+        # handling the case where token is expired after token call, try with new token
+            access_token = get_access_token(apim_view_scope)
+            resp = requests.get(api_url + get_apis_context + '/' + api_id, verify=False,
+                            headers={'Authorization': 'Bearer ' + access_token})
+            if resp.status_code == 200:
+                return resp
+            else:
+                print('[ERROR] API re   trieval unsuccessful. Response code ' + resp.status_code)
+                return None
     else:
         return None
 
